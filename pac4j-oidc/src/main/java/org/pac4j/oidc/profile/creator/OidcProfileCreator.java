@@ -12,7 +12,6 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.credentials.TokenCredentials;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.ProfileHelper;
 import org.pac4j.core.profile.UserProfile;
 import org.pac4j.core.profile.creator.ProfileCreator;
@@ -22,6 +21,7 @@ import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.exceptions.OidcException;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.pac4j.oidc.profile.OidcProfileDefinition;
 import org.slf4j.Logger;
@@ -163,7 +163,7 @@ public class OidcProfileCreator extends ProfileDefinitionAware implements Profil
 
             return Optional.of(profile);
         } catch (final IOException | ParseException | JOSEException | BadJOSEException | java.text.ParseException e) {
-            throw new TechnicalException(e);
+            throw new OidcException(e);
         }
     }
 
@@ -187,7 +187,7 @@ public class OidcProfileCreator extends ProfileDefinitionAware implements Profil
         } catch (final ParseException | java.text.ParseException | JOSEException | BadJOSEException e) {
             logger.debug(e.getMessage(), e);
         } catch (final Exception e) {
-            throw new TechnicalException(e);
+            throw new OidcException(e);
         }
     }
 }

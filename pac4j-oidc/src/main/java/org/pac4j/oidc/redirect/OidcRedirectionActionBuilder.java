@@ -7,7 +7,6 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.exception.http.RedirectionAction;
 import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.core.util.CommonHelper;
@@ -15,6 +14,7 @@ import org.pac4j.core.util.HttpActionHelper;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.config.OidcConfigurationContext;
+import org.pac4j.oidc.exceptions.OidcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +114,7 @@ public class OidcRedirectionActionBuilder implements RedirectionActionBuilder {
             queryString = AuthenticationRequest.parse(params.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getKey, e -> Collections.singletonList(e.getValue())))).toQueryString();
         } catch (Exception e) {
-            throw new TechnicalException(e);
+            throw new OidcException(e);
         }
         return client.getConfiguration().getProviderMetadata().getAuthorizationEndpointURI().toString() + '?' + queryString;
     }

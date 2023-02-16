@@ -13,6 +13,8 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.exceptions.OidcException;
+import org.pac4j.oidc.exceptions.OidcTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,7 @@ public class TokenValidator {
                 final boolean responseTypeContainsIdToken = responseType != null
                     && responseType.contains(OIDCResponseTypeValue.ID_TOKEN.toString());
                 if (!configuration.isAllowUnsignedIdTokens() || responseTypeContainsIdToken) {
-                    throw new TechnicalException("Unsigned ID tokens are not allowed: " +
+                    throw new OidcTokenException("Unsigned ID tokens are not allowed: " +
                         "they must be explicitly enabled on client side and " +
                         "the response_type used must return no ID Token from the authorization endpoint");
                 }
@@ -89,7 +91,7 @@ public class TokenValidator {
             return new IDTokenValidator(configuration.findProviderMetadata().getIssuer(), clientID, jwsAlgorithm,
                 configuration.findProviderMetadata().getJWKSetURI().toURL(), configuration.findResourceRetriever());
         } catch (final MalformedURLException e) {
-            throw new TechnicalException(e);
+            throw new OidcTokenException(e);
         }
     }
 
@@ -120,7 +122,7 @@ public class TokenValidator {
         } else if (joseException != null) {
             throw joseException;
         } else {
-            throw new TechnicalException("Unable to validate the ID token");
+            throw new OidcTokenException("Unable to validate the ID token");
         }
     }
 

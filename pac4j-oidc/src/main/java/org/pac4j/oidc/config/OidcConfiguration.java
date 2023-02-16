@@ -12,11 +12,11 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.pac4j.core.client.config.BaseClientConfiguration;
 import org.pac4j.core.context.HttpConstants;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.logout.handler.DefaultLogoutHandler;
 import org.pac4j.core.logout.handler.LogoutHandler;
 import org.pac4j.core.util.generator.RandomValueGenerator;
 import org.pac4j.core.util.generator.ValueGenerator;
+import org.pac4j.oidc.exceptions.OidcException;
 import org.pac4j.oidc.profile.creator.TokenValidator;
 import org.pac4j.oidc.util.SessionStoreValueRetriever;
 import org.pac4j.oidc.util.ValueRetriever;
@@ -158,14 +158,14 @@ public class OidcConfiguration extends BaseClientConfiguration {
         assertNotBlank("clientId", getClientId());
         if (!AUTHORIZATION_CODE_FLOWS.contains(responseType) && !IMPLICIT_FLOWS.contains(responseType)
             && !HYBRID_CODE_FLOWS.contains(responseType)) {
-            throw new TechnicalException("Unsupported responseType: " + responseType);
+            throw new OidcException("Unsupported responseType: " + responseType);
         }
         // except for the implicit flow and when PKCE is disabled, the secret is mandatory
         if (!IMPLICIT_FLOWS.contains(responseType) && isDisablePkce()) {
             assertNotBlank("secret", getSecret());
         }
         if (this.getDiscoveryURI() == null && this.getProviderMetadata() == null) {
-            throw new TechnicalException("You must define either the discovery URL or directly the provider metadata");
+            throw new OidcException("You must define either the discovery URL or directly the provider metadata");
         }
 
         // default value
@@ -177,7 +177,7 @@ public class OidcConfiguration extends BaseClientConfiguration {
                         (SSLSocketFactory) Class.forName(SSLFactory).getDeclaredConstructor().newInstance()));
             } catch (ClassNotFoundException | InvocationTargetException | InstantiationException
                 | IllegalAccessException | NoSuchMethodException e) {
-                throw new TechnicalException("SSLFactory loaded fail, please check your configuration");
+                throw new OidcException("SSLFactory loaded fail, please check your configuration");
             }
         }
         if (this.getProviderMetadata() == null) {
@@ -187,7 +187,7 @@ public class OidcConfiguration extends BaseClientConfiguration {
                 this.setProviderMetadata(OIDCProviderMetadata.parse(getResourceRetriever().retrieveResource(
                     new URL(this.getDiscoveryURI())).getContent()));
             } catch (final IOException | ParseException e) {
-                throw new TechnicalException(e);
+                throw new OidcException(e);
             }
         }
         if (this.logoutHandler == null) {
@@ -393,7 +393,7 @@ public class OidcConfiguration extends BaseClientConfiguration {
         try {
             this.responseType = ResponseType.parse(responseType);
         } catch (ParseException e) {
-            throw new TechnicalException("Unrecognised responseType: " + responseType, e);
+            throw new OidcException("Unrecognised responseType: " + responseType, e);
         }
     }
 

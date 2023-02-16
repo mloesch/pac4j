@@ -11,10 +11,12 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.credentials.authenticator.Authenticator;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.exceptions.OidcException;
+import org.pac4j.oidc.exceptions.OidcTokenException;
+import org.pac4j.oidc.exceptions.OidcUnsupportedClientAuthMethodException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +74,7 @@ public class OidcAuthenticator implements Authenticator {
                     if (metadataMethods.contains(preferredMethod)) {
                         chosenMethod = preferredMethod;
                     } else {
-                        throw new TechnicalException(
+                        throw new OidcUnsupportedClientAuthMethodException(
                             "Preferred authentication method (" + preferredMethod + ") not supported "
                                 + "by provider according to provider metadata (" + metadataMethods + ").");
                     }
@@ -103,10 +105,10 @@ public class OidcAuthenticator implements Authenticator {
                     clientAuthentication = new PrivateKeyJWT(_clientID, configuration.findProviderMetadata().getTokenEndpointURI(),
                         jwsAlgo, privateKey, keyID, null);
                 } catch (final JOSEException e) {
-                    throw new TechnicalException("Cannot instantiate private key JWT client authentication method", e);
+                    throw new OidcException("Cannot instantiate private key JWT client authentication method", e);
                 }
             } else {
-                throw new TechnicalException("Unsupported client authentication method: " + chosenMethod);
+                throw new OidcUnsupportedClientAuthMethodException("Unsupported client authentication method: " + chosenMethod);
             }
         }
     }
@@ -123,7 +125,7 @@ public class OidcAuthenticator implements Authenticator {
         }
 
         if (!SUPPORTED_METHODS.contains(configurationMethod)) {
-            throw new TechnicalException("Configured authentication method (" + configurationMethod + ") is not supported.");
+            throw new OidcUnsupportedClientAuthMethodException("Configured authentication method (" + configurationMethod + ") is not supported.");
         }
 
         return configurationMethod;
@@ -133,7 +135,7 @@ public class OidcAuthenticator implements Authenticator {
      * The first {@link ClientAuthenticationMethod} from the given list of
      * methods that is supported by this implementation.
      *
-     * @throws TechnicalException if none of the provider-supported methods is supported.
+     * @throws OidcUnsupportedClientAuthMethodException if none of the provider-supported methods is supported.
      */
     private static ClientAuthenticationMethod firstSupportedMethod(final List<ClientAuthenticationMethod> metadataMethods) {
         var firstSupported =
@@ -141,7 +143,7 @@ public class OidcAuthenticator implements Authenticator {
         if (firstSupported.isPresent()) {
             return firstSupported.get();
         } else {
-            throw new TechnicalException("None of the Token endpoint provider metadata authentication methods are supported: " +
+            throw new OidcUnsupportedClientAuthMethodException("None of the Token endpoint provider metadata authentication methods are supported: " +
                 metadataMethods);
         }
     }
@@ -160,7 +162,7 @@ public class OidcAuthenticator implements Authenticator {
                 final var request = createTokenRequest(new AuthorizationCodeGrant(code, new URI(computedCallbackUrl), verifier));
                 executeTokenRequest(request, credentials);
             } catch (final URISyntaxException | IOException | ParseException e) {
-                throw new TechnicalException(e);
+                throw new OidcException(e);
             }
         }
     }
@@ -172,7 +174,7 @@ public class OidcAuthenticator implements Authenticator {
                 final var request = createTokenRequest(new RefreshTokenGrant(refreshToken));
                 executeTokenRequest(request, credentials);
             } catch (final IOException | ParseException e) {
-                throw new TechnicalException(e);
+                throw new OidcException(e);
             }
         }
     }
@@ -198,7 +200,7 @@ public class OidcAuthenticator implements Authenticator {
         final var response = OIDCTokenResponseParser.parse(httpResponse);
         if (response instanceof TokenErrorResponse) {
             final var errorObject = ((TokenErrorResponse) response).getErrorObject();
-            throw new TechnicalException("Bad token response, error=" + errorObject.getCode() + "," +
+            throw new OidcTokenException("Bad token response, error=" + errorObject.getCode() + "," +
                 " description=" + errorObject.getDescription());
         }
         logger.debug("Token response successful");

@@ -4,7 +4,6 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.jwt.AbstractJwtProfile;
 import org.pac4j.oidc.client.OidcClient;
 
@@ -12,6 +11,7 @@ import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import org.pac4j.oidc.exceptions.OidcException;
 
 /**
  * <p>This class is the user profile for sites using OpenID Connect protocol.</p>
@@ -137,7 +137,7 @@ public class OidcProfile extends AbstractJwtProfile {
             try {
                 return JWTParser.parse(getIdTokenString());
             } catch (final ParseException e) {
-                throw new TechnicalException(e);
+                throw new OidcException(e);
             }
         } else {
             return null;

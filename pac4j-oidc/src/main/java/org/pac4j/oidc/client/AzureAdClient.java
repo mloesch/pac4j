@@ -12,13 +12,13 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.pac4j.core.context.HttpConstants;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.callback.CallbackUrlResolver;
 import org.pac4j.core.http.callback.PathParameterCallbackUrlResolver;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.core.util.HttpUtils;
 import org.pac4j.oidc.client.azuread.AzureAdResourceRetriever;
 import org.pac4j.oidc.config.AzureAdOidcConfiguration;
+import org.pac4j.oidc.exceptions.OidcTokenException;
 import org.pac4j.oidc.profile.azuread.AzureAdProfile;
 import org.pac4j.oidc.profile.azuread.AzureAdProfileCreator;
 
@@ -89,13 +89,13 @@ public class AzureAdClient extends OidcClient {
 
             final var responseCode = connection.getResponseCode();
             if (responseCode != 200) {
-                throw new TechnicalException("request for access token failed: " + HttpUtils.buildHttpErrorMessage(connection));
+                throw new OidcTokenException("request for access token failed: " + HttpUtils.buildHttpErrorMessage(connection));
             }
             var body = HttpUtils.readBody(connection);
             final Map<String, Object> res = objectMapper.readValue(body, typeRef);
             return (String)res.get("access_token");
         } catch (final IOException e) {
-            throw new TechnicalException(e);
+            throw new OidcTokenException(e);
         } finally {
             HttpUtils.closeConnection(connection);
         }

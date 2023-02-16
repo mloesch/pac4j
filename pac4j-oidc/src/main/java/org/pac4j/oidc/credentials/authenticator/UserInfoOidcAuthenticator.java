@@ -16,6 +16,7 @@ import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.core.util.InitializableObject;
 import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.exceptions.OidcException;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.pac4j.oidc.profile.OidcProfileDefinition;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class UserInfoOidcAuthenticator extends InitializableObject implements Au
                 httpResponse.getContent());
             final var userInfoResponse = UserInfoResponse.parse(httpResponse);
             if (userInfoResponse instanceof UserInfoErrorResponse) {
-                throw new TechnicalException("Bad User Info response, error="
+                throw new OidcException("Bad User Info response, error="
                     + ((UserInfoErrorResponse) userInfoResponse).getErrorObject().toJSONObject());
             } else {
                 final var userInfoSuccessResponse = (UserInfoSuccessResponse) userInfoResponse;
@@ -107,7 +108,7 @@ public class UserInfoOidcAuthenticator extends InitializableObject implements Au
                 return userInfoClaimsSet;
             }
         } catch (IOException | ParseException | java.text.ParseException e) {
-            throw new TechnicalException(e);
+            throw new OidcException(e);
         }
     }
 

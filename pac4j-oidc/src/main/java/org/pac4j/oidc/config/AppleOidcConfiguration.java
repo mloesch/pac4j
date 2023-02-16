@@ -11,7 +11,6 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.SubjectType;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.store.GuavaStore;
 import org.pac4j.core.store.Store;
 import org.pac4j.core.util.CommonHelper;
@@ -23,6 +22,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import org.pac4j.oidc.exceptions.OidcException;
 
 /**
  * Apple OpenID Connect configuration.
@@ -111,7 +111,7 @@ public class AppleOidcConfiguration extends OidcConfiguration {
             signer = new ECDSASigner(privateKey);
             signedJWT.sign(signer);
         } catch (JOSEException e) {
-            throw new TechnicalException(e);
+            throw new OidcException(e);
         }
         var secret = signedJWT.serialize();
         if (store != null) {

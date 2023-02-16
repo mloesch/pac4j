@@ -11,7 +11,6 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.credentials.extractor.CredentialsExtractor;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.exception.http.BadRequestAction;
 import org.pac4j.core.exception.http.OkAction;
 import org.pac4j.core.util.CommonHelper;
@@ -19,6 +18,9 @@ import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.exceptions.OidcException;
+import org.pac4j.oidc.exceptions.OidcIssuerMismatchException;
+import org.pac4j.oidc.exceptions.OidcStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +85,7 @@ public class OidcExtractor implements CredentialsExtractor {
             try {
                 response = AuthenticationResponseParser.parse(new URI(computedCallbackUrl), parameters);
             } catch (final URISyntaxException | ParseException e) {
-                throw new TechnicalException(e);
+                throw new OidcException(e);
             }
 
             if (response instanceof AuthenticationErrorResponse) {
@@ -98,23 +100,23 @@ public class OidcExtractor implements CredentialsExtractor {
             var metadata = configuration.getProviderMetadata();
             if (metadata.supportsAuthorizationResponseIssuerParam() &&
                 !metadata.getIssuer().equals(successResponse.getIssuer())) {
-                throw new TechnicalException("Issuer mismatch, possible mix-up attack.");
+                throw new OidcIssuerMismatchException("Issuer mismatch, possible mix-up attack.");
             }
 
             if (configuration.isWithState()) {
                 // Validate state for CSRF mitigation
                 final var requestState = (State) configuration.getValueRetriever()
                     .retrieve(client.getStateSessionAttributeName(), client, context, sessionStore)
-                    .orElseThrow(() -> new TechnicalException("State cannot be determined"));
+                    .orElseThrow(() -> new OidcStateException("State cannot be determined"));
 
                 final var responseState = successResponse.getState();
                 if (responseState == null) {
-                    throw new TechnicalException("Missing state parameter");
+                    throw new OidcStateException("Missing state parameter");
                 }
 
                 logger.debug("Request state: {}/response state: {}", requestState, responseState);
                 if (!requestState.equals(responseState)) {
-                    throw new TechnicalException(
+                    throw new OidcStateException(
                         "State parameter is different from the one sent in authentication request.");
                 }
             }
